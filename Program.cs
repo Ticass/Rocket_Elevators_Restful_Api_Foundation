@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace TodoApi
+namespace RestApi
 {
     public class Program
     {
@@ -24,3 +24,5 @@ namespace TodoApi
                 });
     }
 }
+
+

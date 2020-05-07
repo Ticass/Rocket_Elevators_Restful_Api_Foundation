@@ -1,109 +1,193 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TodoApi.Models;
+using RestApi.Models;
+using Newtonsoft.Json.Linq;
 
-namespace TodoApi.Controllers
+namespace RestApi.Controllers
 {
     [Route("api/elevators")]
     [ApiController]
-    public class elevatorsController : ControllerBase
+    public class ElevatorsController : ControllerBase
     {
-        private readonly MysqlContext _context;
+        private readonly DatabaseContext _context;
 
-        public elevatorsController(MysqlContext context)
+        public ElevatorsController(DatabaseContext context)
         {
             _context = context;
         }
 
-        // GET: api/elevators
+
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<elevators>>> Getelevators()
+        public async Task<ActionResult<List<Elevators>>> GetElevatorsList()
         {
-            return await _context.elevators.ToListAsync();
+
+          var list =  await _context.Elevators.ToListAsync();
+
+               if (list == null)
+            {
+                return NotFound();
+            }
+
+     
+        List<Elevators> listElevators = new List<Elevators>();
+
+
+
+        foreach (var elevator in list){
+
+            if (elevator.status == "Inactive" || elevator.status == "Intervention" ){
+         
+            listElevators.Add(elevator);
+
+
+
+            }
         }
 
-        // GET: api/elevators/5
+
+             return listElevators;
+
+            }
+
+
+
         [HttpGet("{id}")]
-        public async Task<ActionResult<elevators>> Getelevators(long id)
+        public async Task<ActionResult<Elevators>> GetElevators(long id, string Status)
         {
-            var elevators = await _context.elevators.FindAsync(id);
+            var Elevators = await _context.Elevators.FindAsync(id);
 
-            if (elevators == null)
+            if (Elevators == null)
             {
                 return NotFound();
             }
 
-            return elevators;
+            var jsonGet = new JObject ();
+            jsonGet["status"] = Elevators.status;
+            return Content  (jsonGet.ToString(), "application/json");
         }
 
-        // PUT: api/elevators/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Putelevators(long id, elevators elevators)
+
+
+
+
+    [HttpGet("get/status/all")]
+
+        public async Task<ActionResult<IEnumerable<Elevators>>> GetElevators()
         {
-            if (id != elevators.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(elevators).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!elevatorsExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+        return await _context.Elevators.ToListAsync();
         }
 
-        // POST: api/elevators
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+
+        [HttpGet("get/status/{id}")]
+        public IEnumerable<Elevators> GetElevatorsId(long id)
+        {
+        IQueryable<Elevators> Elevators =
+        from elev in _context.Elevators
+        where elev.id == id
+        select elev;
+        return Elevators.ToList();
+        }
+
+
+        [HttpGet("get/status/inactive")]
+        public IEnumerable<Elevators> GetElevatorsInactive()
+        {
+        IQueryable<Elevators> Elevators =
+        from elev in _context.Elevators
+        where elev.status == "Inactive"
+        select elev;
+        return Elevators.ToList();
+        }
+
+
+        [HttpGet("get/status/active")]
+        public IEnumerable<Elevators> GetElevatorsActive()
+        {
+        IQueryable<Elevators> Elevators =
+        from elev in _context.Elevators
+        where elev.status == "Active"
+        select elev;
+        return Elevators.ToList();
+        }
+
+
+        [HttpGet("get/status/intervention")]
+        public IEnumerable<Elevators> GetElevatorsIntervention()
+        {
+        IQueryable<Elevators> Elevators =
+        from elev in _context.Elevators
+        where elev.status == "Intervention"
+        select elev;
+        return Elevators.ToList();
+        }
+
+
+        [HttpGet("get/status/others")]
+        public IEnumerable<Elevators> GetElevatorsOthers()
+        {
+        IQueryable<Elevators> Elevators =
+        from elev in _context.Elevators
+        where elev.status != "Active" && elev.status != "Inactive" && elev.status != "Intervention"
+        select elev;
+        return Elevators.ToList();
+
+        }
+
+
+    [HttpPut("{id}")]
+        public IActionResult PutElevatorStatus(long id, Elevators item)
+        {
+            var ele = _context.Elevators.Find(id); 
+            if (ele == null)
+            {
+                return NotFound();
+            }
+            ele.status = item.status;
+
+            _context.Elevators.Update(ele);
+            _context.SaveChanges();
+    
+            var jsonPut = new JObject ();
+            jsonPut["Update"] = "Update done to elevator id : " + id + " to the status : " + ele.status;
+            return Content  (jsonPut.ToString(), "application/json");
+        
+        }
+
+
+
         [HttpPost]
-        public async Task<ActionResult<elevators>> Postelevators(elevators elevators)
+        public async Task<ActionResult<Elevators>> PostElevators(Elevators Elevators)
         {
-            _context.elevators.Add(elevators);
+            _context.Elevators.Add(Elevators);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("Getelevators", new { id = elevators.Id }, elevators);
+            return CreatedAtAction("GetElevators", new { id = Elevators.id }, Elevators);
         }
 
-        // DELETE: api/elevators/5
+        // DELETE: api/Elevators/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<elevators>> Deleteelevators(long id)
+        public async Task<ActionResult<Elevators>> DeleteElevators(long id)
         {
-            var elevators = await _context.elevators.FindAsync(id);
-            if (elevators == null)
+            var Elevators = await _context.Elevators.FindAsync(id);
+            if (Elevators == null)
             {
                 return NotFound();
             }
 
-            _context.elevators.Remove(elevators);
+            _context.Elevators.Remove(Elevators);
             await _context.SaveChangesAsync();
 
-            return elevators;
+            return Elevators;
         }
 
-        private bool elevatorsExists(long id)
+        private bool ElevatorsExists(long id)
         {
-            return _context.elevators.Any(e => e.Id == id);
+            return _context.Elevators.Any(e => e.id == id);
         }
     }
 }

@@ -1,4 +1,4 @@
 {
-    "appService.defaultWebAppToDeploy": "/subscriptions/ed22297b-4634-4ef3-a8cd-210226bbf7a5/resourceGroups/appsvc_windows_centralus/providers/Microsoft.Web/sites/RocketAlexis",
-    "appService.deploySubpath": "publish"
+    "appService.preDeployTask": "publish-release",
+    "appService.deploySubpath": "bin/Release/netcoreapp3.1/publish"
 }

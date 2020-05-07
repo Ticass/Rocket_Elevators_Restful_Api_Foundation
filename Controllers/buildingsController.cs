@@ -1,58 +1,77 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TodoApi.Models;
+using RestApi.Models;
+using Newtonsoft.Json.Linq;
+using MySql.Data;
+using MySql.Data.MySqlClient;
+using System.Data;
 
-namespace TodoApi.Controllers
+namespace RestApi.Controllers
 {
     [Route("api/buildings")]
     [ApiController]
-    public class buildingsController : ControllerBase
+    public class BuildingsController : ControllerBase
     {
-        private readonly MysqlContext _context;
+        private readonly DatabaseContext _context;
 
-        public buildingsController(MysqlContext context)
+        public BuildingsController(DatabaseContext context)
         {
             _context = context;
         }
 
-        // GET: api/buildings
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<buildings>>> Getbuildings()
+
+
+    [HttpGet("intervention")]
+
+    public  ActionResult<List<Buildings>> GetBuildingsWithProblems()
         {
-            return await _context.buildings.ToListAsync();
+
+        IQueryable<Buildings>  Building = 
+
+        from bui in _context.Buildings
+        join bat in _context.Batteries on bui.id equals bat.building_id
+        join col in _context.Columns on bat.id equals col.battery_id
+        join ele in _context.Elevators on col.id equals ele.column_id
+
+        where bat.status == "Intervention" || col.status == "Intervention" || ele.status == "Intervention" // va tu les ajouter 3 fois sans specifier si col, ele ou bat ?
+        select bui;
+        
+      
+        return Building.ToList();
+
         }
 
-        // GET: api/buildings/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<buildings>> Getbuildings(long id)
-        {
-            var buildings = await _context.buildings.FindAsync(id);
 
-            if (buildings == null)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Buildings>> GetBuildings(long id, string Status)
+        {
+            var Buildings = await _context.Buildings.FindAsync(id);
+
+            if (Buildings == null)
             {
                 return NotFound();
             }
 
-            return buildings;
+    
+            return Buildings;
+        
         }
 
-        // PUT: api/buildings/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+      
         [HttpPut("{id}")]
-        public async Task<IActionResult> Putbuildings(long id, buildings buildings)
+        public async Task<IActionResult> PutBuildings(long id, Buildings Buildings)
         {
-            if (id != buildings.id)
+            if (id != Buildings.id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(buildings).State = EntityState.Modified;
+            _context.Entry(Buildings).State = EntityState.Modified;
 
             try
             {
@@ -60,7 +79,7 @@ namespace TodoApi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!buildingsExists(id))
+                if (!BuildingsExists(id))
                 {
                     return NotFound();
                 }
@@ -69,41 +88,42 @@ namespace TodoApi.Controllers
                     throw;
                 }
             }
+            
+            var jsonPut = new JObject ();
+            jsonPut["Update"] = "Update done to Buildings id : " + id;
+            return Content  (jsonPut.ToString(), "application/json");
 
-            return NoContent();
         }
 
-        // POST: api/buildings
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+ 
         [HttpPost]
-        public async Task<ActionResult<buildings>> Postbuildings(buildings buildings)
+        public async Task<ActionResult<Buildings>> PostBuildings(Buildings Buildings)
         {
-            _context.buildings.Add(buildings);
+            _context.Buildings.Add(Buildings);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("Getbuildings", new { id = buildings.id }, buildings);
+            return CreatedAtAction("GetBuildings", new { id = Buildings.id }, Buildings);
         }
 
-        // DELETE: api/buildings/5
+    
         [HttpDelete("{id}")]
-        public async Task<ActionResult<buildings>> Deletebuildings(long id)
+        public async Task<ActionResult<Buildings>> DeleteBuildings(long id)
         {
-            var buildings = await _context.buildings.FindAsync(id);
-            if (buildings == null)
+            var Buildings = await _context.Buildings.FindAsync(id);
+            if (Buildings == null)
             {
                 return NotFound();
             }
 
-            _context.buildings.Remove(buildings);
+            _context.Buildings.Remove(Buildings);
             await _context.SaveChangesAsync();
 
-            return buildings;
+            return Buildings;
         }
 
-        private bool buildingsExists(long id)
+        private bool BuildingsExists(long id)
         {
-            return _context.buildings.Any(e => e.id == id);
+            return _context.Buildings.Any(e => e.id == id);
         }
     }
 }

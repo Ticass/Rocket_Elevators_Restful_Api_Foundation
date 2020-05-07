@@ -1,118 +1,172 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TodoApi.Models;
+using RestApi.Models;
+using Newtonsoft.Json.Linq;
 
-namespace TodoApi.Controllers
+namespace RestApi.Controllers
 {
-    [Route("api/Interventions")]
+    [Route("api/interventions")]
     [ApiController]
     public class InterventionsController : ControllerBase
     {
-        private readonly MysqlContext _context;
+        private readonly DatabaseContext _context;
 
-        public InterventionsController(MysqlContext context)
+        public InterventionsController(DatabaseContext context)
         {
             _context = context;
         }
-
-        // GET: api/Interventions
-       /* [HttpGet]
-        public async Task<ActionResult<IEnumerable<Interventions>>> GetInterventions()
-        {
-            return await _context.Interventions.ToListAsync();
-        }
-
-        // GET: api/Interventions/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Interventions>> GetInterventions(long id)
-        {
-            var interventions = await _context.Interventions.FindAsync(id);
-
-            if (interventions == null)
-            {
-                return NotFound();
-            }
-
-            return interventions;
-        }
-        */
 
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Interventions>>> GetInterventions()
         {
-            var interventions = await _context.Interventions.Where(s => s.intervention_status == "Pending" && s.intervention_start_date == null).ToListAsync();
+            return await _context.Interventions.ToListAsync();
+        }
 
-            if (interventions == null)
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Interventions>> GetInterventions(long id, string Status)
+        {
+            var Interventions = await _context.Interventions.FindAsync(id);
+
+            if (Interventions == null)
             {
                 return NotFound();
             }
 
-            return interventions;
+            var jsonGet = new JObject ();
+            jsonGet["status"] = Interventions.status;
+            return Content  (jsonGet.ToString(), "application/json");
         }
 
 
 
 
-        // PUT: api/Interventions/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+
         [HttpPut("{id}")]
-        public async Task<ActionResult<Interventions>> PutInterventions(long id, Interventions interventions)
+        public IActionResult PutInterventionstatus(long id, Interventions item)
         {
-            var interventionsToUpdate = await _context.Interventions.FindAsync(id);
-
-            if (interventionsToUpdate == null )
+            var col = _context.Interventions.Find(id); 
+            if (col == null)
             {
                 return NotFound();
             }
+            col.status = item.status;
 
-            interventionsToUpdate.intervention_status = interventions.intervention_status;
-            interventionsToUpdate.intervention_start_date = interventions.intervention_start_date;
-            interventionsToUpdate.intervention_end_date = interventions.intervention_end_date;
+            _context.Interventions.Update(col);
+            _context.SaveChanges();
 
-            await _context.SaveChangesAsync();
-
-
-            return interventionsToUpdate;
+            var jsonPut = new JObject ();
+            jsonPut["Update"] = "Update done to Interventions id : " + id + " to the status : " + col.status;
+            return Content  (jsonPut.ToString(), "application/json");
+        
         }
 
-        // POST: api/Interventions
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for
-        // more details see https://aka.ms/RazorPagesCRUD.
+
         [HttpPost]
-        public async Task<ActionResult<Interventions>> PostInterventions(Interventions interventions)
+        public async Task<ActionResult<Interventions>> PostInterventions(Interventions Interventions)
         {
-            _context.Interventions.Add(interventions);
+            _context.Interventions.Add(Interventions);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetInterventions", new { id = interventions.id }, interventions);
+            return CreatedAtAction("GetInterventions", new { id = Interventions.id }, Interventions);
         }
 
         // DELETE: api/Interventions/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<Interventions>> DeleteInterventions(long id)
         {
-            var interventions = await _context.Interventions.FindAsync(id);
-            if (interventions == null)
+            var Interventions = await _context.Interventions.FindAsync(id);
+            if (Interventions == null)
             {
                 return NotFound();
             }
 
-            _context.Interventions.Remove(interventions);
+            _context.Interventions.Remove(Interventions);
             await _context.SaveChangesAsync();
 
-            return interventions;
+            return Interventions;
         }
 
         private bool InterventionsExists(long id)
         {
             return _context.Interventions.Any(e => e.id == id);
         }
+    
+
+
+
+
+
+
+
+
+
+            // api/interventions/pending
+            [HttpGet("pending")]
+            public async Task<ActionResult<List<Interventions>>> GetInterventionPendingList() {
+                
+                var list =  await _context.Interventions.ToListAsync();
+
+                if (list == null) {
+                    return NotFound();
+                }
+
+                List<Interventions> listIntervention = new List<Interventions>();
+
+                foreach (var intervention in list) {
+                    if (intervention.status == "Pending" || intervention.start_date_time_intervention == null ) {
+                        listIntervention.Add(intervention);
+                    }
+                }
+                return listIntervention;
+            }
+
+            // api/interventions/inProgress/id
+            [HttpPut("inProgress/{id}")]
+            public IActionResult putInterventionStatusInProgress(long id, Interventions item) {
+                
+                var col = _context.Interventions.Find(keyValues: id); 
+                
+                if (col == null) {
+                    return NotFound();
+                }
+
+                col.status = item.status;
+                col.start_date_time_intervention = item.start_date_time_intervention;
+
+                _context.Interventions.Update(col);
+                _context.SaveChanges();
+
+                var jsonPut = new JObject ();
+                jsonPut["Update"] = "Update done to Interventions id : " + id + " to the status : " + col.status + "start at" + col.start_date_time_intervention;
+                return Content  (jsonPut.ToString(), "application/json");
+            }
+
+            // api/interventions/completed/id
+            [HttpPut("completed/{id}")]
+            public IActionResult putInterventionStatusCompleted(long id, Interventions item) {
+                
+                var col = _context.Interventions.Find(id); 
+                
+                if (col == null) {
+                    return NotFound();
+                }
+
+                col.status = item.status;
+                col.end_date_time_intervention = item.end_date_time_intervention;
+
+                _context.Interventions.Update(col);
+                _context.SaveChanges();
+
+                var jsonPut = new JObject ();
+                jsonPut["Update"] = "Update done to Interventions id : " + id + " to the status : " + col.status + "start at" + col.end_date_time_intervention;
+                return Content  (jsonPut.ToString(), "application/json");
+            }
     }
 }

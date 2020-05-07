@@ -4,9 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
-using TodoApi.Models;
+using RestApi.Models;
 
-namespace TodoApi
+namespace RestApi
 {
     public class Startup
     {
@@ -17,12 +17,12 @@ namespace TodoApi
 
         public IConfiguration Configuration { get; }
 
-                    // This method gets called by the runtime. Use this method to add services to the container.
-            public void ConfigureServices(IServiceCollection services)
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
             {
-                services.AddCors();
+                services.AddCors(); //Test local without problems
 
-                services.AddDbContext<MysqlContext>(options =>
+                services.AddDbContext<DatabaseContext>(options =>
                     options.UseMySql(Configuration.GetConnectionString("DefaultConnection")));
 
                 services.AddMvc();
@@ -46,6 +46,11 @@ namespace TodoApi
             {
                 endpoints.MapControllers();
             });
+
+            
         }
     }
 }
+
+
+

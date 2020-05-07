@@ -1,5 +1,5 @@
 {
-  "FilePath": "c:\\Users\\thrif\\Documents\\github\\Rocket_Elevators_Restful_Api_Foundation\\TodoApi.csproj",
+  "FilePath": "/mnt/c/users/heber/desktop/codeboxx/RestApi/RestApi.csproj",
   "Configuration": {
     "ConfigurationName": "MVC-3.0",
     "LanguageVersion": "3.0",
@@ -20518,7 +20518,7 @@
     ],
     "CSharpLanguageVersion": 800
   },
-  "RootNamespace": "TodoApi",
+  "RootNamespace": "RestApi",
   "Documents": [],
   "SerializationFormat": "0.2"
 }

@@ -1,28 +1,22 @@
 using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
 
-namespace TodoApi.Models {
-     public partial class leads {
-    //     public Leads () {
-    //         Customers = new HashSet<Customers> ();
-    //     }
 
-        public long Id { get; set; }
-        public string Full_name { get; set; }
-        public string Company_name { get; set; }
-         public string Email { get; set; }
-        public string Phone { get; set; }
-         public string Project_name { get; set; }
-         public string Project_desc { get; set; }
-        public string Department { get; set; }
-        public string Message { get; set; }
-        [JsonIgnore]
-           public byte[] Attached_file { get; set; }
-           public DateTime Created_at { get; set; }
-            public DateTime Updated_at { get; set; }
-            // public string OriginalFileName { get; set; }
-        // [JsonIgnore]
-        // public ICollection<Customers> Customers { get; set; }
-    }
+
+public class Leads
+{
+    public long id { get; set; }
+    public string full_name { get; set; }
+    public string email {get; set;}
+    public string phone {get; set;}
+    public string project_name {get; set;}
+    public string project_description {get; set;}
+    public string department {get; set;}
+    public string message {get; set;}
+    public DateTime created_at {get; set;}
+    public DateTime updated_at {get; set;}
+    public byte[] file_attachment {get; set;}
+    public string file_name {get; set;}
+    public long? customer_id { get; set; }
+
+
 }
